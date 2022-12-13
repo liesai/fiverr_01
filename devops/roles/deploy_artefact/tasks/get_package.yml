@@ -1,0 +1,4 @@
+- name: Copy artefact
+  ansible.builtin.copy:
+    src: test_release_dev.rar
+    dest: /home/ansible/rar_dev_package.rar

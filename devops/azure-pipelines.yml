@@ -1,0 +1,51 @@
+# Ansible pipeline
+
+trigger:
+- master
+
+
+pool:
+  name: 'ansible'
+  vmImage: 'ubuntu-latest'
+
+steps:
+
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.9'
+    architecture: 'x64'
+    addToPath: True
+
+
+- task: DownloadPackage@1
+  inputs:
+    packageType: 'upack'
+    feed: '/1e1ed7cf-3239-4dd4-800c-fb4240ec7b44'
+    view: 
+    definition: '77052c8c-c0a0-449b-a166-1964ca6cde54'
+    version: '0.0.1'
+    downloadPath: '.'
+
+- task: DownloadSecureFile@1
+  name: privateKey
+  displayName: 'Download privatekey'
+  inputs:
+    secureFile: 'ansible.pem'
+
+- script: |
+    echo Installing $(privateKey.secureFilePath) to the current directory...
+    chmod 600 $(privateKey.secureFilePath)
+    cp $(privateKey.secureFilePath) .
+
+
+- script: |
+      # Write your commands here
+      pip install ansible
+  displayName: 'Run Ansible Playbook'
+
+- task: Ansible@0
+  inputs:
+    ansibleInterface: 'agentMachine'
+    playbookPathOnAgentMachine: 'main.yml'
+    inventoriesAgentMachine: 'file'
+    inventoryFileOnAgentMachine: '$(env)'
