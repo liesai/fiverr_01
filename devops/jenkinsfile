@@ -1,0 +1,26 @@
+pipeline {
+    agent {label 'jenkinsnode'}
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/liesai/fiverr_01.git',  credentialsId: 'app']]])
+            }
+
+        }
+        stage('Get Secret File') {
+            steps {
+                withCredentials([file(credentialsId: 'pem', variable: 'SECRET_FILE')]) {
+            
+                    sh 'cp $SECRET_FILE /tmp/ansible.pem'
+                    sh 'chmod 600 /tmp/ansible.pem'
+                }
+            }
+        }
+        stage('Run Ansible Playbook') {
+            steps {
+                ansiblePlaybook colorized: true, installation: 'ansible', inventory: 'devops/dev', playbook: 'devops/main.yml'
+            }
+        }
+    }
+}
